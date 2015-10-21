@@ -13,6 +13,16 @@ class ViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
+        
+        MovieClient.getMovies { (results, error) -> () in
+            
+            print("=================== Results ====================")
+            print(results)
+            
+            print("done")
+        }
+        
+        
     }
 
     override func didReceiveMemoryWarning() {

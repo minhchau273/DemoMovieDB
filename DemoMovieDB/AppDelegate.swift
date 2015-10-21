@@ -16,6 +16,15 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func application(application: UIApplication, didFinishLaunchingWithOptions launchOptions: [NSObject: AnyObject]?) -> Bool {
         // Override point for customization after application launch.
+
+        guard let config = NSDictionary(contentsOfFile: NSBundle.mainBundle().pathForResource("Config", ofType: "plist")!) else {
+            print("Please set up API key in Config.plist")
+            return false
+        }
+        
+        let apiKey = config["api_key"] as! String
+        MovieClient.apiKey = apiKey
+        
         return true
     }
 
