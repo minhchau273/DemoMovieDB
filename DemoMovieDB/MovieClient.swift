@@ -11,10 +11,10 @@ import UIKit
 class MovieClient: NSObject {
     
     static var apiKey: String!
-    //    static let sharedInstance = MovieClient()
     
-    static func getMovies(completion: (results: NSArray?, error: NSError?) -> ()) {
+    static func getMovies(completion: (movies: [Movie]?, error: NSError?) -> ()) {
         var urlString = "http://api.themoviedb.org/3/movie/upcoming"
+//        var urlString = "http://api.themoviedb.org/3/review/150540"
         
         urlString = addApiKey(urlString)
         
@@ -29,30 +29,70 @@ class MovieClient: NSObject {
             if let response = response, data = data {
                 print("===================\nresponse\n===================")
                 print(response)
-                print("===================\ndata\n===================")
-                //                print(String(data: data, encoding: NSUTF8StringEncoding))
-                
                 
                 //Serialize the JSON result into a dictionary
                 let jsonResult: NSDictionary! = try! NSJSONSerialization.JSONObjectWithData(data, options:NSJSONReadingOptions.MutableContainers) as? NSDictionary
                 
                 //If there is a result add the data into an array
-                if jsonResult.count>0 && jsonResult["results"]!.count > 0 {
+//                if jsonResult.count>0 && jsonResult["results"]!.count > 0 {
+                if let results = jsonResult["results"] {
                     
-                    let results: NSArray = jsonResult["results"]! as! NSArray
+//                    let results: NSArray = jsonResult["results"]! as! NSArray
                     //Use the completion handler to pass the results
-                    completion(results: results, error: nil)
+                    
+                    let movies = Movie.moviesWithArray(results as! [NSDictionary])
+                    completion(movies: movies, error: nil)
                 } else {
                     print("error")
-                    completion(results: nil, error: error)
+                    completion(movies: nil, error: error)
                 }
-                
                 
                 
             } else {
                 print("===================\nerror\n===================")
                 print(error)
-                completion(results: nil, error: error)
+                completion(movies: nil, error: error)
+            }
+        }
+        
+        task.resume()
+        
+    }
+    
+    static func getMovieDetail(id: Int, completion: (movie: Movie?, error: NSError?) -> ()) {
+        var urlString = "http://api.themoviedb.org/3/movie/\(id)"
+        
+        urlString = addApiKey(urlString)
+        
+        let url = NSURL(string: urlString)
+        
+        let request = NSMutableURLRequest(URL: url!)
+        
+        let session = NSURLSession.sharedSession()
+        let task = session.dataTaskWithRequest(request) { data, response, error in
+            if let response = response, data = data {
+                print("===================\nresponse\n===================")
+                print(response)
+                
+                let jsonResult: NSDictionary! = try! NSJSONSerialization.JSONObjectWithData(data, options:NSJSONReadingOptions.MutableContainers) as? NSDictionary
+                
+                let movie = Movie(dictionary: jsonResult, isFull: true)
+                completion(movie: movie, error: nil)
+                
+//                if let results = jsonResult["results"] {
+//                    
+//                    let movies = Movie.moviesWithArray(results as! [NSDictionary])
+//                    completion(movies: movies, error: nil)
+//                } else {
+//                    print("error")
+//                    completion(movie: nil, error: error)
+//                }
+                
+                
+            } else {
+                print("===================\nerror\n===================")
+                print(error)
+                completion(movie: nil, error: error)
             }
         }
         
