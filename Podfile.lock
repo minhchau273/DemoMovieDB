@@ -1,0 +1,22 @@
+PODS:
+  - Alamofire (3.1.0)
+  - AlamofireImage (2.1.0):
+    - Alamofire (~> 3.1)
+  - Realm (0.96.1):
+    - Realm/Headers (= 0.96.1)
+  - Realm/Headers (0.96.1)
+  - RealmSwift (0.96.1):
+    - Realm (= 0.96.1)
+
+DEPENDENCIES:
+  - Alamofire (~> 3.0)
+  - AlamofireImage (~> 2.0)
+  - RealmSwift
+
+SPEC CHECKSUMS:
+  Alamofire: 415bd7f56197722978759078486689f7ef913dce
+  AlamofireImage: 97e00995920d85b5cb23ee4c3b7f92605f5dc74b
+  Realm: d05e4621f67fb1c36acd4e573ac5b52a407fc2cc
+  RealmSwift: 6c96a72b385027d9593b69f6821c697fe843eb68
+
+COCOAPODS: 0.39.0

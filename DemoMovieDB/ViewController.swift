@@ -7,9 +7,11 @@
 //
 
 import UIKit
+import AlamofireImage
 
 class ViewController: UIViewController {
     
+    @IBOutlet weak var imageView: UIImageView!
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
@@ -105,6 +107,9 @@ class ViewController: UIViewController {
                 for trailer in movie!.trailers {
                     print("Trailer: \(trailer.name)")
                 }
+                
+                let imgUrl = NSURL(string: movie!.poster)
+                self.imageView.af_setImageWithURL(imgUrl!)
             }
         }
         
