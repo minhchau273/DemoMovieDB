@@ -7,100 +7,106 @@
 //
 
 import UIKit
+import Alamofire
 
 class MovieClient: NSObject {
     
     static var apiKey: String!
-    
-    static func getMovies(completion: (movies: [Movie]?, error: NSError?) -> ()) {
-        var urlString = "http://api.themoviedb.org/3/movie/upcoming"
-//        var urlString = "http://api.themoviedb.org/3/review/150540"
+       
+    static func getMovies2(completion: (movies: [Movie]?, error: NSError?) -> ()) {
+        let urlString = "http://api.themoviedb.org/3/movie/upcoming"
         
-        urlString = addApiKey(urlString)
+        var param = [String: AnyObject]()
+        param["api_key"] = apiKey
         
-        
-        //The Url that will be called
-        let url = NSURL(string: urlString)
-        
-        let request = NSMutableURLRequest(URL: url!)
-        
-        let session = NSURLSession.sharedSession()
-        let task = session.dataTaskWithRequest(request) { data, response, error in
-            if let response = response, data = data {
-                print("===================\nresponse\n===================")
-                print(response)
+        Alamofire.request(.GET, urlString, parameters: param).responseJSON { response in
+            print("original request: \(response.request)")
+            print("response: \(response.response)")
+            print("server data: \(response.data)")
+            print("result: \(response.result)")
+            
+            
+            if let json = response.result.value as? NSDictionary {
+                //                print("JSON: \(json)")
                 
-                //Serialize the JSON result into a dictionary
-                let jsonResult: NSDictionary! = try! NSJSONSerialization.JSONObjectWithData(data, options:NSJSONReadingOptions.MutableContainers) as? NSDictionary
-                
-                //If there is a result add the data into an array
-//                if jsonResult.count>0 && jsonResult["results"]!.count > 0 {
-                if let results = jsonResult["results"] {
-                    
-//                    let results: NSArray = jsonResult["results"]! as! NSArray
-                    //Use the completion handler to pass the results
+                if let results = json["results"] {
                     
                     let movies = Movie.moviesWithArray(results as! [NSDictionary])
                     completion(movies: movies, error: nil)
-                } else {
-                    print("error")
-                    completion(movies: nil, error: error)
                 }
                 
                 
             } else {
-                print("===================\nerror\n===================")
-                print(error)
-                completion(movies: nil, error: error)
+                completion(movies: nil, error: response.result.error)
+                print("error: \(response.result.error)")
             }
         }
         
-        task.resume()
+        
         
     }
     
-    static func getMovieDetail(id: Int, completion: (movie: Movie?, error: NSError?) -> ()) {
-        var urlString = "http://api.themoviedb.org/3/movie/\(id)"
+    static func getMovieDetail2(id: Int, completion: (movie: Movie?, error: NSError?) -> ()) {
+        let urlString = "http://api.themoviedb.org/3/movie/\(id)"
+        print("get movie detail 2")
+        var params = [String: AnyObject]()
+        params["api_key"] = apiKey
         
-        urlString = addApiKey(urlString)
-        
-        let url = NSURL(string: urlString)
-        
-        let request = NSMutableURLRequest(URL: url!)
-        
-        let session = NSURLSession.sharedSession()
-        let task = session.dataTaskWithRequest(request) { data, response, error in
-            if let response = response, data = data {
-                print("===================\nresponse\n===================")
-                print(response)
-                
-                let jsonResult: NSDictionary! = try! NSJSONSerialization.JSONObjectWithData(data, options:NSJSONReadingOptions.MutableContainers) as? NSDictionary
-                
-                let movie = Movie(dictionary: jsonResult, isFull: true)
+        Alamofire.request(.GET, urlString, parameters: params).responseJSON { response in
+            
+            if let json = response.result.value as? NSDictionary {
+                let movie = Movie(dictionary: json, isFull: true)
                 completion(movie: movie, error: nil)
-                
-//                if let results = jsonResult["results"] {
-//                    
-//                    let movies = Movie.moviesWithArray(results as! [NSDictionary])
-//                    completion(movies: movies, error: nil)
-//                } else {
-//                    print("error")
-//                    completion(movie: nil, error: error)
-//                }
-                
-                
             } else {
-                print("===================\nerror\n===================")
-                print(error)
+                completion(movie: nil, error: response.result.error)
+                print("Error when getting movie's details: \(response.result.error)")
+            }
+        }
+        
+    }
+    
+    
+    static func getTrailers2(movie: Movie, completion: (trailers: [Trailer]?, error: NSError?) -> ()) {
+        let urlString = "http://api.themoviedb.org/3/movie/\(movie.originalId)/videos"
+        print("get trailer 2")
+        var params = [String: AnyObject]()
+        params["api_key"] = apiKey
+        
+        Alamofire.request(.GET, urlString, parameters: params).responseJSON {
+            response in
+            
+            if let json = response.result.value as? NSDictionary {
+                if let results = json["results"] {
+                    let trailers = Trailer.trailersWithArray(results as! [NSDictionary], movie: movie)
+                    completion(trailers: trailers, error: nil)
+                }
+            } else {
+                completion(trailers: nil, error: response.result.error)
+                print("Error when getting trailers: \(response.result.error)")
+            }
+        }
+        
+    }
+    
+    static func getMovieWithTrailers2(id: Int, completion: (movie: Movie?, error: NSError?) -> ()) {
+        
+        getMovieDetail2(id) { (movie, error) -> () in
+            if movie != nil {
+                getTrailers2(movie!, completion: { (trailers, error) -> () in
+                    if trailers != nil {
+                        for trailer in trailers! {
+                            movie!.trailers.append(trailer)
+                        }
+                        completion(movie: movie, error: nil)
+                    } else {
+                        completion(movie: nil, error: error)
+                    }
+                })
+            } else {
                 completion(movie: nil, error: error)
             }
         }
-        
-        task.resume()
-        
     }
     
-    private static func addApiKey(urlString: String) -> String {
-        return urlString + "?api_key=" + apiKey
-    }
+    
 }
